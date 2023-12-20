@@ -109,7 +109,7 @@ void generatePlayers(int n, int initEnergy) //generate a new player
      }
 }
 
-
+//주사위 돌리기 
 int rolldie(int player)
 {
     char c;
@@ -156,6 +156,7 @@ void actionNode(int player)
     char *name = smmObj_getNodeName( boardPtr );
     void *gradePtr;
     
+    
     switch(type)
     {
         //case lecture:
@@ -170,31 +171,54 @@ void actionNode(int player)
             break;
             
         //case restaurant
-        case SMMNODE_TYPE_RESTAURANT;
-          cur_player[player].energy += //보충에너지가 어디 명시되어있지? ;
+        case SMMNODE_TYPE_RESTAURANT:
+          printf("Let's eat in 식당 and charge 6 energies (remained energy : &i)",cur_player[player].energy + 6);
           
           break;
         
-        
         //case LABORATORY
-        case SMMNODE_TYPE_LABORATORY;
-          //실험실에 왔다는거 알리기
+        case SMMNODE_TYPE_LABORATORY:
           //실험 중인 상태인지 확인하기 
-            //실험중인 상태라면 - 주사위를 굴려서 지정된 실험 성공 기준값 이상이 나오면 실험 종료 아니면 실험중 상태로 머무름
+          if ( Labtime == 1 )
+          {
+            //실험중인 상태라면 - 주사위를 굴려서 지정된 실험 성공 기준값 이상이 나오면 실험 종료 아니면 실험중 상태로 머무름 
+            printf("Experiment time! Let's see if you can satisfy professor (threshold: 4)");
+            getchar();
+            //주사위 입력 받기
+            int diceResult = rolldie(player); 
+            //주사위 값이랑 기준값이랑 비교하기 
+            if ( diceResult >= 4 )
+            {
+                 Labtime = 0;
+            }
+              //성공 - 실험실 나가기
+            else  
+              //실패 - 반 복
+              printf(" Experiment result : &d, fail T_T. a needs more experiment......", diceResult);
+              }      
             //실험중인 상태가 아니라면 - 나가기 
-        
+          else
+             printf("This is not experiment time. You can go through this lab.");          
+          break;
+          
         //case HOME
-        case SMMNODE_TYPE_HOME;
-          //집이라는거 알리기
-          printf("&s gets a food chance! press any key to pick a food card", cur_player[player].name);              
-          //지정된 보충 에너지 만큼 현재 에너지에 추가하기  보충에너지 = 기초 에너지
+        case SMMNODE_TYPE_HOME:
+          //집이라는거 알리기, 지정된 보충 에너지 만큼 현재 에너지에 추가하기  보충에너지 = 기초 에너지 = 18
+          printf("returned to HOME! energy charged by 18 (total : &i) ", cur_player[player].energy + 18);              
+          
+          break;
         
         //case GOTOLAB
-        case SMMNODE_TYPE_GOTOLAB;
+        case SMMNODE_TYPE_GOTOLAB:
           //실험실로 이동한다고 알리기
+          printf(" OMG! This is experiment time!! &s hee goes to the lab.", cur_player[player].name);
           //실험 중 상태로 전환하기
+          Labtime = 1;
+          
+          break;
+          
         //case FOODCHANCE
-        case SMMNODE_TYPE_FOODCHANCE;
+        case SMMNODE_TYPE_FOODCHANCE:
           //음식찬스라는 걸 알리고 키 누를 때 까지 기다리 기  
           printf("&s gets a food chance! press any key to pick a food card", cur_player[player].name); 
           getchar();
@@ -208,7 +232,7 @@ void actionNode(int player)
           break;
           
         //case FESTIVAL
-        case SMMNODE_TYPE_FESTIVAL;
+        case SMMNODE_TYPE_FESTIVAL:
           //축제에 왔다는 걸 알리고
           printf("&s participates to Snow festival! press any key to pick a festival card", cur_player[player].name);
           getchar();
@@ -240,6 +264,23 @@ void goForward(int player, int s력tep)
                 smmObj_getNodeName(boardPtr);
 }
 
+int game_end (void)
+{
+    int i;
+    int flag_end = 0;
+    
+    // 만약 GRADUATE_CREDIT 이상의 학점을 이수하고, 집으로 이동하면 즉시 종료 
+    for (i=0; i<player_nr ; i++)
+    {
+        if (cur_player.accumCredit >= GRADUATE_CREDIT && cur_player.position == SMMNODE_TYPE_HOME );
+          {
+            flag_end = 1;
+            break;
+          }
+    }
+    
+    return flag_end;
+}
 
 int main(int argc, const char * argv[]) {
     
@@ -252,6 +293,7 @@ int main(int argc, const char * argv[]) {
     int i;
     int initEnergy;
     int turn=0;
+    int Labtime = 0;
     
     board_nr = 0;
     food_nr = 0;
@@ -372,7 +414,7 @@ int main(int argc, const char * argv[]) {
     
     
     //3. SM Marble game starts ---------------------------------------------------------------------------------
-    while (1) //is anybody graduated?
+    while (game_end == 1) //is anybody graduated?
     {
         int die_result; 
         
