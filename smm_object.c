@@ -25,6 +25,26 @@ static char smmNodeName[SMMNODE_TYPE_MAX][MAX_CHARNAME] = {
        "축제시간"
 };
 
+#if 0
+static char smmFoodName[SMMNODE_TYPE_MAX][MAX_CHARNAME] =
+{
+       "치킨",
+       "맥주",
+       "탕후루",
+       "컵라면",
+       "감자탕",
+       "컵밥",
+       "짜장면",
+       "학식",
+       "파스타",
+       "피자",
+       "햄버거",
+       "샌드위치",
+       "요거트",
+       "비빔밥"              
+};
+#endif
+
 char* smmObj_getTypeName(int type)
 {
       return (char*)smmNodeName[type];
@@ -50,14 +70,26 @@ typedef struct smmObject {
        smmObjType_e objType; 
        int type;
        int credit;
-       int energy;
+       int energy; 
        smmObjGrade_e grade;
 } smmObject_t;
+
+//음식 구조체 
+typedef struct smmFood {
+       char name[MAX_CHARNAME];
+       int energy;
+} smmFood_t;
+
+//축제 구조체
+typedef struct smmFestival {
+        char card[MAX_CHARNAME];
+} smmCard_t;
+ 
 
 static smmObject_t smm_node[MAX_NODE];
 static int smmObj_noNode = 0;
 
-static smmObject_t smm_food[MAX_FOOD];
+static smmFood_t smm_food[MAX_FOOD];
 static int smmObj_noFood = 0;
 
 static smmObject_t smm_Festival[MAX_FESTIVAL];
@@ -85,9 +117,9 @@ void* smmObj_genObject(char* name, smmObjType_e objType, int type, int credit, i
 void* smmObj_genFood(char* name, int energy)
 {
       //메모리 allocate for food object
-      smmObject_t* foodPtr ;
+      smmFood_t* foodPtr ;
       
-      foodPtr = (smmObject_t*)malloc(sizeof(smmObject_t));
+      foodPtr = (smmFood_t*)malloc(sizeof(smmFood_t));
       
       //이름, 에너지 넣기 
       strcpy(foodPtr->name, name); 
@@ -99,9 +131,9 @@ void* smmObj_genFood(char* name, int energy)
 void* smmObj_genFestival(char* card)
 {
       //메모리 allocatie for festival object 
-      smmObject_t* festivalPtr;
+      smmCard_t* festivalPtr;
       
-      festivalPtr = (smmObject_t*)malloc(sizeof(smmObject_t));
+      festivalPtr = (smmCard_t*)malloc(sizeof(smmCard_t));
       //card 넣기 
       strcpy(festivalPtr->card, card);
 }
@@ -131,9 +163,11 @@ int smmObj_getNodeEnergy(int node_nr)
 }
 
 //음 식  
-int smmObj_getFoodName(int food_nr)
+char* smmObj_getFoodName(void* obj)
 {
-    return smm_food[food_nr].name;
+    smmFood_t* foodPtr = (smmFood_t*)obj;
+    
+    return foodPtr->name;
 }
 
 int smmObj_getFoodEnergy(int food_nr)
@@ -142,8 +176,10 @@ int smmObj_getFoodEnergy(int food_nr)
 }
 
 //페스티벌  
-int smmObj_getFestivalCard (int festival_nr)
+char* smmObj_getFestivalCard(void* obj)
 {
-    return smm_festival[festival_nr].card
+    smmCard_t* festivalPtr = (smmCard_t*)obj;
+    
+    return festivalPtr->name;
 }
 

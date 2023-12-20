@@ -33,7 +33,13 @@ typedef struct player {
         int flag_graduate;
 } player_t;
 
+typedef struct food {
+        char name[MAX_CHARNAME];
+        int energy;
+} food_t;
+
 static player_t *cur_player;
+static food_t *cur_food;
 //static player_t cur_player[MAX_PLAYER];
 
 #if 0
@@ -119,10 +125,32 @@ int rolldie(int player)
     return (rand()%MAX_DIE + 1);
 }
 
+//랜덤한 성적을 내보내는 함수
+smmObjGrade_e getRandomGrade()
+{
+  return (smmObjGrade_e)(rand()%MAX_GRADE);
+} 
+
+//랜덤의 음식을 출력하기  
+int getRandomFoodEnergy()
+ {
+   int randomIndex = (rand()%food_nr);
+   return randomIndex;
+ }
+ 
+//랜덤한 카드 뽑기
+int getRandomFestivalCard()
+{
+    int randomCard = (rand90%festival_nr);
+    return randomCard;
+}
+ 
+
 //action code when a player stays at a node
 void actionNode(int player)
 {
     void *boardPtr = smmdb_getData(LISTNO_NODE, cur_player[player].position );
+    void *foodPtr = smmdb_getData(LISTNO_FOODCARD, cur_food[player].energy );
     //int type = smmObj_getNodeType( cur_player[player].position );
     int type = smmObj_getNodeType( boardPtr );
     char *name = smmObj_getNodeName( boardPtr );
@@ -133,26 +161,80 @@ void actionNode(int player)
         //case lecture:
         case SMMNODE_TYPE_LECTURE:
              if 
-            cur_player[player].accumCredit += smmObj_getNodeCredit( boardPtr );
-            cur_player[player].energy -= smmObj_getNodeEnergy( boardPtr );
-            
+            cur_player[player].accumCredit += smmObj_getNodeCredit( boardPtr );     
+            cur_player[player].energy -= smmObj_getNodeEnergy(boardPtr);           
             //grade generation
-            gradePtr = smmObj_genObject(name, smmObjType_grade, 0, smmObj_getNodeCredit( boardPtr ), 0, ??);
+            gradePtr = smmObj_genObject(name, smmObjType_grade, 0, smmObj_getNodeCredit( boardPtr ), 0, getRandomGrade());
             smmdb_addTail(LISTNO_OFFSET_GRADE + player, gradePtr);
             
             break;
             
+        //case restaurant
+        case SMMNODE_TYPE_RESTAURANT;
+          cur_player[player].energy += //보충에너지가 어디 명시되어있지? ;
+          
+          break;
+        
+        
+        //case LABORATORY
+        case SMMNODE_TYPE_LABORATORY;
+          //실험실에 왔다는거 알리기
+          //실험 중인 상태인지 확인하기 
+            //실험중인 상태라면 - 주사위를 굴려서 지정된 실험 성공 기준값 이상이 나오면 실험 종료 아니면 실험중 상태로 머무름
+            //실험중인 상태가 아니라면 - 나가기 
+        
+        //case HOME
+        case SMMNODE_TYPE_HOME;
+          //집이라는거 알리기
+          printf("&s gets a food chance! press any key to pick a food card", cur_player[player].name);              
+          //지정된 보충 에너지 만큼 현재 에너지에 추가하기  보충에너지 = 기초 에너지
+        
+        //case GOTOLAB
+        case SMMNODE_TYPE_GOTOLAB;
+          //실험실로 이동한다고 알리기
+          //실험 중 상태로 전환하기
+        //case FOODCHANCE
+        case SMMNODE_TYPE_FOODCHANCE;
+          //음식찬스라는 걸 알리고 키 누를 때 까지 기다리 기  
+          printf("&s gets a food chance! press any key to pick a food card", cur_player[player].name); 
+          getchar();
+          //기존의 에너지에, 랜덤으로 선택된 음식의 에너지 더하기 
+          int randomFoodIndex = getRandomFoodEnergy();
+          cur_player[player].energy += smmObj_getFoodEnergy(randomFoodIndex);
+          
+          //선택된 음식 출력
+          printf("Selected food: %s, Energy: %d\n", smmObj_getFoodName(randomFoodIndex), smmObj_getFoodEnergy(randomFoodIndex)); 
+          
+          break;
+          
+        //case FESTIVAL
+        case SMMNODE_TYPE_FESTIVAL;
+          //축제에 왔다는 걸 알리고
+          printf("&s participates to Snow festival! press any key to pick a festival card", cur_player[player].name);
+          getchar();
+          //축제 카드 랜덤으로 보여주기
+          int randomCardIndex = getRandomFestivalCard();
+          printf("Your mission is %s", smmObj_getFestivalCard(getRandomFestivalCard())); 
+          //미션 완료했는지 확인하기 
+          printf("Press any key when mission is ended."); 
+          getchar ();
+           
+          break;
+        
         default:
             break;
     }
 }
 
-void goForward(int player, int step)
+void goForward(int player, int s력tep)
 {
      void *boardPtr;
+     //플레이어의 위치에 전진한걸 더하기  
      cur_player[player].position += step;
+     //플레이어가 이동한 위치의 노드 정보를 얻어 옴  
      boardPtr = smmdb_getData(LISTNO_NODE, cur_player[player].position );
      
+     //이동한 노드 정보 출 
      printf("%s go to node %i (name: %s)\n", 
                 cur_player[player].name, cur_player[player].position,
                 smmObj_getNodeName(boardPtr);
@@ -174,8 +256,6 @@ int main(int argc, const char * argv[]) {
     board_nr = 0;
     food_nr = 0;
     festival_nr = 0;
-    
-    smmObject_t *foodObj;
     
     srand(time(NULL));
     
@@ -228,7 +308,7 @@ int main(int argc, const char * argv[]) {
     while ( fscanf( fp, "%s %i", name, &energy) == 2 ) //read a food parameter set
     {
           void *foodObj = smmObj_genFood( name, energy );
-          smmdb_addTail(LISTNO_NODE, foodObj);
+          smmdb_addTail(LISTNO_FOOD, foodObj);
           food_nr++;
         //store the parameter set
     }
@@ -238,7 +318,7 @@ int main(int argc, const char * argv[]) {
     //food_nr 만큼 반복  
     for (i=0; i<food_nr; i++)
     {
-        void *foodObj = smmdb_getData(LISTNO_NODE, i);
+        void *foodObj = smmdb_getData(LISTNO_FOOD, i);
         
         printf("&i. &s, charge:&i\n", i, smmObj_getFoodName(foodObj), smmObj_getFoodEnergy(foodObj));  
     }
@@ -256,7 +336,7 @@ int main(int argc, const char * argv[]) {
     while (fscanf( fp, "&s", card ) == 1 ) //read a festival card string
     {
           void *FestivalObj = smmObj_genFestival( card );
-          smmdb_addTail(LISTNO_NODE, foodObj);
+          smmdb_addTail(LISTNO_FOODCARD, foodObj);
           festival_nr++;
         //store the parameter set
     }
@@ -294,7 +374,7 @@ int main(int argc, const char * argv[]) {
     //3. SM Marble game starts ---------------------------------------------------------------------------------
     while (1) //is anybody graduated?
     {
-        int die_result;
+        int die_result; 
         
         
         //4-1. initial printing
