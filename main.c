@@ -455,6 +455,7 @@ int main(int argc, const char * argv[]) {
         turn = (turn + 1)%player_nr;
     }
     
+    //printGrades함수를 실행시켜서, 각 플레이어가 들은 강의랑 학점 print 하기  
     for (i=0; i<player_nr; i++)
     {
         printf("Player %d's grades:\n", i + 1);

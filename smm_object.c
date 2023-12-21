@@ -147,8 +147,7 @@ char* smmObj_getNodeName(void* obj)
     
     return ptr->name;
 }
-
-//3. 관련 함수 변경 
+ 
   //타입 
 int smmObj_getNodeType(int node_nr)
 {
