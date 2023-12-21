@@ -24,15 +24,17 @@ static int festival_nr;
 
 static int player_nr;
 
-
+//player라는 구조체에 에너지, 위치, 이름, 학점, 졸업여부에 +Labtime 을 넣음  
 typedef struct player {
         int energy;
         int position;
         char name[MAX_CHARNAME];
         int accumCredit;
         int flag_graduate;
+        int Labtime; 
 } player_t;
 
+//food 구조체에 이름과 에너지를 넣음  
 typedef struct food {
         char name[MAX_CHARNAME];
         int energy;
@@ -180,7 +182,7 @@ void actionNode(int player)
         //case LABORATORY
         case SMMNODE_TYPE_LABORATORY:
           //실험 중인 상태인지 확인하기 
-          if ( Labtime == 1 )
+          if ( cur_player[player].Labtime == 1 )
           {
             //실험중인 상태라면 - 주사위를 굴려서 지정된 실험 성공 기준값 이상이 나오면 실험 종료 아니면 실험중 상태로 머무름 
             printf("Experiment time! Let's see if you can satisfy professor (threshold: 4)");
@@ -191,7 +193,7 @@ void actionNode(int player)
             if ( diceResult >= 4 )
             {
                  //성공 - 실험실 나가기
-                 Labtime = 0;
+                 cur_player[player].Labtime = 0;
             }
             else  
               //실패 - 반 복
@@ -214,7 +216,7 @@ void actionNode(int player)
           //실험실로 이동한다고 알리기
           printf(" OMG! This is experiment time!! &s goes to the lab.", cur_player[player].name);
           //실험 중 상태로 전환하기
-          Labtime = 1;
+          cur_player[player].Labtime = 1;
           
           break;
           
@@ -268,19 +270,23 @@ void goForward(int player, int s력tep)
 int game_end (void)
 {
     int i;
-    int flag_end = 0;
+    
+    //각 플레이어의 flag 값 초기화  
+    for (i = 0; i < player_nr; i++)
+    {
+        cur_player[i].flag_graduate = 0;
+    }
     
     // 만약 GRADUATE_CREDIT 이상의 학점을 이수하고, 집으로 이동하면 즉시 종료 
     for (i=0; i<player_nr ; i++)
     {
-        if (cur_player.accumCredit >= GRADUATE_CREDIT && cur_player.position == SMMNODE_TYPE_HOME );
+        if (cur_player[i].accumCredit >= GRADUATE_CREDIT && cur_player[i].position == SMMNODE_TYPE_HOME )
           {
-            flag_end = 1;
+            cur_player[i].flag_graduate = 1;
             break;
           }
     }
-    
-    return flag_end;
+    return cur_player[player].flag_graduate;
 }
 
 int main(int argc, const char * argv[]) {
@@ -435,6 +441,8 @@ int main(int argc, const char * argv[]) {
         //4-5. next turn
         turn = (turn + 1)%player_nr;
     }
+    
+    printf();
     
     
     free(cur_player);
