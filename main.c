@@ -172,6 +172,7 @@ void actionNode(int player)
             
         //case restaurant
         case SMMNODE_TYPE_RESTAURANT:
+        //에너지 더해주고, 전체 에너지 나타내기  
           printf("Let's eat in 식당 and charge 6 energies (remained energy : &i)",cur_player[player].energy + 6);
           
           break;
@@ -189,14 +190,14 @@ void actionNode(int player)
             //주사위 값이랑 기준값이랑 비교하기 
             if ( diceResult >= 4 )
             {
+                 //성공 - 실험실 나가기
                  Labtime = 0;
             }
-              //성공 - 실험실 나가기
             else  
               //실패 - 반 복
               printf(" Experiment result : &d, fail T_T. a needs more experiment......", diceResult);
               }      
-            //실험중인 상태가 아니라면 - 나가기 
+            //실험중인 상태가 아니라면 - 실험할 때가 아니라고 하기 
           else
              printf("This is not experiment time. You can go through this lab.");          
           break;
@@ -211,7 +212,7 @@ void actionNode(int player)
         //case GOTOLAB
         case SMMNODE_TYPE_GOTOLAB:
           //실험실로 이동한다고 알리기
-          printf(" OMG! This is experiment time!! &s hee goes to the lab.", cur_player[player].name);
+          printf(" OMG! This is experiment time!! &s goes to the lab.", cur_player[player].name);
           //실험 중 상태로 전환하기
           Labtime = 1;
           
@@ -219,14 +220,14 @@ void actionNode(int player)
           
         //case FOODCHANCE
         case SMMNODE_TYPE_FOODCHANCE:
-          //음식찬스라는 걸 알리고 키 누를 때 까지 기다리 기  
+          //음식찬스라는 걸 알리고 키 누를 때 까지 기다리기  
           printf("&s gets a food chance! press any key to pick a food card", cur_player[player].name); 
           getchar();
           //기존의 에너지에, 랜덤으로 선택된 음식의 에너지 더하기 
           int randomFoodIndex = getRandomFoodEnergy();
           cur_player[player].energy += smmObj_getFoodEnergy(randomFoodIndex);
           
-          //선택된 음식 출력
+          //선택된 음식 출력, 음식 이름이랑 에너지 표시 
           printf("Selected food: %s, Energy: %d\n", smmObj_getFoodName(randomFoodIndex), smmObj_getFoodEnergy(randomFoodIndex)); 
           
           break;
