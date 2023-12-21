@@ -15,7 +15,8 @@
 #define FOODFILEPATH "marbleFoodConfig.txt"
 #define FESTFILEPATH "marbleFestivalConfig.txt"
 
-
+#define RESTAURANT_ENERGY      6
+#define HOME_ENERGY            18
 
 //board configuration parameters
 static int board_nr;
@@ -62,7 +63,7 @@ void* findGrade(int player, char *lectureName); //find the grade from the player
 void printGrades(int player); //print all the grade history of the player
 #endif
 
-
+//플레이어 성적 강의 출력 
 void printGrades(int player)
 {
      int i;
@@ -73,7 +74,7 @@ void printGrades(int player)
          printf("%s : %i\n", smmObj_getNodeName(gradePtr), smmObj_getNodeGrade(gradePtr));
      }
 }
-
+//플레이어 상태 출력  
 void printPlayerStatus(void)
 {
      int i;
@@ -87,7 +88,7 @@ void printPlayerStatus(void)
                       cur_player[i].position);
      }
 }
-
+//플레이어 생성 
 void generatePlayers(int n, int initEnergy) //generate a new player
 {
      int i;
@@ -108,6 +109,7 @@ void generatePlayers(int n, int initEnergy) //generate a new player
          cur_player[i].energy = initEnergy;
          cur_player[i].accumCredit = 0;
          cur_player[i].flag_graduate = 0;
+         cur_player[i].Labtime = 0;
      }
 }
 
@@ -143,7 +145,7 @@ int getRandomFoodEnergy()
 //랜덤한 카드 뽑기
 int getRandomFestivalCard()
 {
-    int randomCard = (rand90%festival_nr);
+    int randomCard = (rand()%festival_nr);
     return randomCard;
 }
  
@@ -163,7 +165,6 @@ void actionNode(int player)
     {
         //case lecture:
         case SMMNODE_TYPE_LECTURE:
-             if 
             cur_player[player].accumCredit += smmObj_getNodeCredit( boardPtr );     
             cur_player[player].energy -= smmObj_getNodeEnergy(boardPtr);           
             //grade generation
@@ -174,8 +175,8 @@ void actionNode(int player)
             
         //case restaurant
         case SMMNODE_TYPE_RESTAURANT:
-        //에너지 더해주고, 전체 에너지 나타내기  
-          printf("Let's eat in 식당 and charge 6 energies (remained energy : &i)",cur_player[player].energy + 6);
+          //에너지 더해주고, 전체 에너지 나타내기  
+          printf("Let's eat in 식당 and charge 6 energies (remained energy : %i)",cur_player[player].energy + RESTAURANT_ENERGY);
           
           break;
         
@@ -194,12 +195,13 @@ void actionNode(int player)
             {
                  //성공 - 실험실 나가기
                  cur_player[player].Labtime = 0;
+                 printf("You succeeded the expriment!! GOOOD");
             }
+            //실패 - 변화없음  
             else  
-              //실패 - 반 복
-              printf(" Experiment result : &d, fail T_T. a needs more experiment......", diceResult);
+              printf(" Experiment result : %d, fail T_T. a needs more experiment......", diceResult);
               }      
-            //실험중인 상태가 아니라면 - 실험할 때가 아니라고 하기 
+          //실험중인 상태가 아니라면 - 실험할 때가 아니라고 하기 
           else
              printf("This is not experiment time. You can go through this lab.");          
           break;
@@ -207,14 +209,14 @@ void actionNode(int player)
         //case HOME
         case SMMNODE_TYPE_HOME:
           //집이라는거 알리기, 지정된 보충 에너지 만큼 현재 에너지에 추가하기  보충에너지 = 기초 에너지 = 18
-          printf("returned to HOME! energy charged by 18 (total : &i) ", cur_player[player].energy + 18);              
+          printf("returned to HOME! energy charged by 18 (total : %i) ", cur_player[player].energy + HOME_ENERGY);              
           
           break;
         
         //case GOTOLAB
         case SMMNODE_TYPE_GOTOLAB:
           //실험실로 이동한다고 알리기
-          printf(" OMG! This is experiment time!! &s goes to the lab.", cur_player[player].name);
+          printf(" OMG! This is experiment time!! %s goes to the lab.", cur_player[player].name);
           //실험 중 상태로 전환하기
           cur_player[player].Labtime = 1;
           
@@ -223,7 +225,7 @@ void actionNode(int player)
         //case FOODCHANCE
         case SMMNODE_TYPE_FOODCHANCE:
           //음식찬스라는 걸 알리고 키 누를 때 까지 기다리기  
-          printf("&s gets a food chance! press any key to pick a food card", cur_player[player].name); 
+          printf("%s gets a food chance! press any key to pick a food card", cur_player[player].name); 
           getchar();
           //기존의 에너지에, 랜덤으로 선택된 음식의 에너지 더하기 
           int randomFoodIndex = getRandomFoodEnergy();
@@ -237,7 +239,7 @@ void actionNode(int player)
         //case FESTIVAL
         case SMMNODE_TYPE_FESTIVAL:
           //축제에 왔다는 걸 알리고
-          printf("&s participates to Snow festival! press any key to pick a festival card", cur_player[player].name);
+          printf("%s participates to Snow festival! press any key to pick a festival card", cur_player[player].name);
           getchar();
           //축제 카드 랜덤으로 보여주기
           int randomCardIndex = getRandomFestivalCard();
@@ -253,18 +255,27 @@ void actionNode(int player)
     }
 }
 
-void goForward(int player, int s력tep)
+void goForward(int player, int step)
 {
-     void *boardPtr;
-     //플레이어의 위치에 전진한걸 더하기  
-     cur_player[player].position += step;
-     //플레이어가 이동한 위치의 노드 정보를 얻어 옴  
-     boardPtr = smmdb_getData(LISTNO_NODE, cur_player[player].position );
+     //만약 cur_player.Labtime이 0이라면 움직이고, 아니면 움직이지 않기
+     if (cur_player[player].Labtime == 0 )
+     { 
+       void *boardPtr;
+       //플레이어의 위치에 전진한걸 더하기  
+       cur_player[player].position += step;
+       //플레이어가 이동한 위치의 노드 정보를 얻어 옴  
+       boardPtr = smmdb_getData(LISTNO_NODE, cur_player[player].position );
      
-     //이동한 노드 정보 출 
-     printf("%s go to node %i (name: %s)\n", 
-                cur_player[player].name, cur_player[player].position,
-                smmObj_getNodeName(boardPtr);
+       //이동한 노드 정보 출력 
+       printf("%s go to node %i (name: %s)\n", 
+       cur_player[player].name, cur_player[player].position,
+       smmObj_getNodeName(boardPtr);
+     }
+     else
+     {
+     //실험실로 갔다고 출력하기
+      printf("%s goes to the lab", cur_player[player].name); 
+     } 
 }
 
 int game_end (void)
@@ -347,6 +358,7 @@ int main(int argc, const char * argv[]) {
     
     
     //2. food card config 
+    //에러뜨면 에러뜬 값 출력하기  
     if ((fp = fopen(FOODFILEPATH,"r")) == NULL)
     {
         printf("[ERROR] failed to open %s. This file should be in the same directory of SMMarble.exe.\n", FOODFILEPATH);
@@ -369,12 +381,13 @@ int main(int argc, const char * argv[]) {
     {
         void *foodObj = smmdb_getData(LISTNO_FOOD, i);
         
-        printf("&i. &s, charge:&i\n", i, smmObj_getFoodName(foodObj), smmObj_getFoodEnergy(foodObj));  
+        printf("%i. %s, charge:%i\n", i, smmObj_getFoodName(foodObj), smmObj_getFoodEnergy(foodObj));  
     }
     
     
     
-    //3. festival card config 
+    //3. festival card config
+    //에러 뜨면 출력하기 
     if ((fp = fopen(FESTFILEPATH,"r")) == NULL)
     {
         printf("[ERROR] failed to open %s. This file should be in the same directory of SMMarble.exe.\n", FESTFILEPATH);
@@ -382,7 +395,7 @@ int main(int argc, const char * argv[]) {
     }
     
     printf("\n\nReading festival card component......\n");
-    while (fscanf( fp, "&s", card ) == 1 ) //read a festival card string
+    while (fscanf( fp, "%s", card ) == 1 ) //read a festival card string
     {
           void *FestivalObj = smmObj_genFestival( card );
           smmdb_addTail(LISTNO_FOODCARD, foodObj);
@@ -421,7 +434,7 @@ int main(int argc, const char * argv[]) {
     
     
     //3. SM Marble game starts ---------------------------------------------------------------------------------
-    while (game_end == 1) //is anybody graduated?
+    while (game_end() == 1) //is anybody graduated?
     {
         int die_result; 
         
@@ -442,7 +455,13 @@ int main(int argc, const char * argv[]) {
         turn = (turn + 1)%player_nr;
     }
     
-    printf();
+    for (i=0; i<player_nr; i++)
+    {
+        printf("Player %d's grades:\n", i + 1);
+        printGrades(i); 
+        printf("\n");
+    }
+    
     
     
     free(cur_player);

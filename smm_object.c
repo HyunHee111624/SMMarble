@@ -139,6 +139,8 @@ void* smmObj_genFestival(char* card)
 }
 
 //3. 관련 함수 변경 
+//보드판 
+  //이름  
 char* smmObj_getNodeName(void* obj)
 {
     smmObject_t* ptr = (smmObject_t*)obj;
@@ -147,35 +149,38 @@ char* smmObj_getNodeName(void* obj)
 }
 
 //3. 관련 함수 변경 
+  //타입 
 int smmObj_getNodeType(int node_nr)
 {
     return smm_node[node_nr].type;
 }
-
+ //Credit
 int smmObj_getNodeCredit(int node_nr)
 {
     return smm_node[node_nr].credit;
 }
-
+  //에너지 
 int smmObj_getNodeEnergy(int node_nr)
 {
     return smm_node[node_nr].energy;
 }
 
 //음 식  
+ //이름 
 char* smmObj_getFoodName(void* obj)
 {
     smmFood_t* foodPtr = (smmFood_t*)obj;
     
     return foodPtr->name;
 }
-
+  //에너지  
 int smmObj_getFoodEnergy(int food_nr)
 {
     return smm_food[food_nr].energy;
 }
 
-//페스티벌  
+//페스티벌 
+  //카드 
 char* smmObj_getFestivalCard(void* obj)
 {
     smmCard_t* festivalPtr = (smmCard_t*)obj;
